@@ -13,6 +13,24 @@ to resolve node module paths at compile time and embed them into the
 resulting JS file?
 ]#
 
+import os
+
+template embedModule*(modulePath: string) =
+  # doesn't really work because gorgeEx cannot be executed in the caller directory :(
+  static:
+    echo instantiationInfo()
+    let callerPath = instantiationInfo().filename
+    let callerDir = parentDir(callerPath)
+    echo callerDir
+    let cmd = "cd \"" & callerDir & "\" && node -e 'console.log(require.resolve(\"" & modulePath & "\"))'"
+    echo gorgeEx("pwd")
+    echo cmd
+    let cmdReturn = gorgeEx(cmd)
+    echo cmdReturn
+    if cmdReturn.exitCode != 0:
+      echo cmdReturn.output
+      {.error: "Failed to embed node module: " & modulePath.}
+
 proc require*(lib: cstring, T: typedesc): T {.importcpp: """require(#)""".}
 
 proc debug*[T](x: T) {.importc: "console.log", varargs.}
