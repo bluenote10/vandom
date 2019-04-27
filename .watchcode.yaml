@@ -11,33 +11,14 @@ filesets:
     exclude_gitignore: true
 
 tasks:
-  frontend:
-    fileset: default
-    commands:
-      #- "npm run build_renderer"
-      #- "npm run build_renderer_basic"
-      - "nim js -o:./build/renderer.js ./src/app_renderer.nim"
-      #- "nim js src/ui_units.nim"
-    clear_screen: true
-    queue_events: false
-
-  run:
+  default:
     fileset: default
     commands:
       - "npm start"
     clear_screen: true
     queue_events: false
 
-  test:
-    fileset: default
-    commands:
-      - "nim -r js -d:nodejs -d:testVanilla tests/tests.nim"
-    clear_screen: true
-    queue_events: true
-
-default_task: frontend
-#default_task: run
-#default_task: test
+default_task: default
 log: false
 sound: true
 notifications: true

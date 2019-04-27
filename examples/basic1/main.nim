@@ -1,6 +1,5 @@
-import karax/kdom except DomEvent, DomKeyboardEvent
-import ../ui_units
-import ../ui_dsl
+import vandom
+import vandom/dom
 
 
 proc run(unit: Unit) =
@@ -11,15 +10,16 @@ proc run(unit: Unit) =
   root.appendChild(node)
   unit.setFocus()
 
-uiDefs:
-  var button: DomElement
+
+unitDefs:
+  var button: Element
   var input: Input
-  let mainUnit = ui.container([
-    ui.tag("div").text("Hello world"),
+  let mainUnit = ep.container([
+    ep.tag("div").text("Hello world"),
     textNode("TextNode"),
-    ui.tag("div").text("Hello world"),
-    ui.button("Button") as button,
-    ui.input("Input") as input,
+    ep.tag("div").text("Hello world"),
+    ep.button("Button") as button,
+    ep.input("Input") as input,
   ])
 
   button.onClick() do (e: DomEvent):

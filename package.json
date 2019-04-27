@@ -1,31 +1,15 @@
 {
-  "name": "LabNotes",
+  "name": "vandom",
   "version": "0.1.0",
-  "description": "Simple note taking app.",
+  "description": "Experimental library for DOM manipulations in Vanilla Nim",
   "main": "build/main.js",
   "scripts": {
-    "build_main": "nim js -d:node -o:./build/main.js ./src/app_main.nim",
-    "build_renderer": "nim js -o:./build/renderer.js ./src/app_renderer.nim",
-    "build_renderer_basic": "nim js -o:./build/renderer.js ./src/sandbox/app_renderer_basic.nim",
-    "build_css": "node-sass --omit-source-map-url styles/styles.scss build/styles.css",
-    "start": "npm run build_main && npm run build_renderer && npm run build_css && electron ."
+    "build": "nim js -o:./build/main.js ./examples/basic1/main.nim",
+    "start": "npm run build"
   },
-  "keywords": [
-    "Electron",
-    "Nim",
-    "Note taking"
-  ],
+  "keywords": ["Nim"],
   "author": "Fabian Keller",
   "license": "MIT",
-  "devDependencies": {
-    "bulma": "^0.7.4",
-    "electron": "^4.0.4",
-    "node-sass": "^4.11.0",
-    "showdown": "^1.9.0"
-  },
-  "dependencies": {
-    "glob": "^7.1.3",
-    "js-yaml": "^3.12.1",
-    "mousetrap": "^1.6.2"
-  }
+  "devDependencies": {},
+  "dependencies": {}
 }
