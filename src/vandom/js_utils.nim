@@ -14,6 +14,7 @@ resulting JS file?
 ]#
 
 import os
+import macros
 
 template embedModule*(modulePath: string) =
   # doesn't really work because gorgeEx cannot be executed in the caller directory :(
@@ -31,7 +32,27 @@ template embedModule*(modulePath: string) =
       echo cmdReturn.output
       {.error: "Failed to embed node module: " & modulePath.}
 
+proc bundleModule*(modulePath: static[string]) =
+  const code = slurp(modulePath)
+  echo "code: ", code
+  {.emit: [code, "()"].}
+
+proc bundleModules*(modulePaths: static[openarray[string]]) {.compileTime.} =
+  static:
+    for modulePath in modulePaths:
+      const code = slurp(modulePath)
+      echo "code: ", code
+      #{.emit: code.}
+
 proc require*(lib: cstring, T: typedesc): T {.importcpp: """require(#)""".}
+
+proc requireBrowser*(lib: static[cstring], T: typedesc): T =
+  var lib {.importc: lib, nodecl.}: T
+  return lib
+
+proc validateModule*[T](module: T) =
+  if module.isNil():
+    raise newException(LibraryError, "Failed to load module.")
 
 proc debug*[T](x: T) {.importc: "console.log", varargs.}
 
