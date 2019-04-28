@@ -4,6 +4,8 @@
 #
 # -----------------------------------------------------------------------------
 
+import macros
+
 #[
 Note for browser support: Should we use staticRead on something like
 
@@ -12,37 +14,24 @@ Note for browser support: Should we use staticRead on something like
 to resolve node module paths at compile time and embed them into the
 resulting JS file?
 ]#
+macro bundleModules*(modules: typed): untyped =
+  expectKind modules, nnkBracket
+  result = newStmtList()
+  for module in modules:
+    expectKind module, nnkStrLit
 
-import os
-import macros
+    var slurpCall = newCall(ident "slurp", newStrLitNode module.strVal)
+    # crucial trick to make the slurp call use the callsite directory
+    slurpCall.copyLineInfo(modules)
 
-template embedModule*(modulePath: string) =
-  # doesn't really work because gorgeEx cannot be executed in the caller directory :(
-  static:
-    echo instantiationInfo()
-    let callerPath = instantiationInfo().filename
-    let callerDir = parentDir(callerPath)
-    echo callerDir
-    let cmd = "cd \"" & callerDir & "\" && node -e 'console.log(require.resolve(\"" & modulePath & "\"))'"
-    echo gorgeEx("pwd")
-    echo cmd
-    let cmdReturn = gorgeEx(cmd)
-    echo cmdReturn
-    if cmdReturn.exitCode != 0:
-      echo cmdReturn.output
-      {.error: "Failed to embed node module: " & modulePath.}
+    result.add(
+      newNimNode(nnkPragma).add(
+        newColonExpr(ident "emit", slurpCall)
+      )
+    )
 
-proc bundleModule*(modulePath: static[string]) =
-  const code = slurp(modulePath)
-  echo "code: ", code
-  {.emit: [code, "()"].}
+  # echo result.repr
 
-proc bundleModules*(modulePaths: static[openarray[string]]) {.compileTime.} =
-  static:
-    for modulePath in modulePaths:
-      const code = slurp(modulePath)
-      echo "code: ", code
-      #{.emit: code.}
 
 proc require*(lib: cstring, T: typedesc): T {.importcpp: """require(#)""".}
 
