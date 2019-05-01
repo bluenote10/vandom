@@ -9,12 +9,12 @@ import jsffi
 import sugar
 
 
-proc setInterval*(ms: int, action: proc()): ref Interval =
+proc setInterval*(ms: int, action: proc()): ref Interval {.discardable.} =
   ## setInterval overload with arguments switched for nicer syntax
   window.setInterval(action, ms)
 
 
-proc setTimeout*(ms: int, action: proc()): Timeout =
+proc setTimeout*(ms: int, action: proc()): Timeout {.discardable.} =
   ## setTimeout overload with arguments switched for nicer syntax
   setTimeout(action, ms)
 

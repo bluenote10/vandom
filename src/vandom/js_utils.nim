@@ -5,6 +5,9 @@
 # -----------------------------------------------------------------------------
 
 import macros
+import jsffi
+
+export JsObject
 
 #[
 Note for browser support: Should we use staticRead on something like
@@ -108,8 +111,6 @@ type
 proc `[]`*[K, V](d: JDict[K, V], k: K): V {.importcpp: "#[#]".}
 proc `[]=`*[K, V](d: JDict[K, V], k: K, v: V) {.importcpp: "#[#] = #".}
 
-proc newJDict*[K, V](): JDict[K, V] {.importcpp: "{@}".}
-
 proc len*[K, V](d: JDict[K, V]): int {.importcpp: "Object.keys(#).length".}
 
 proc contains*[K, V](d: JDict[K, V], k: K): bool {.importcpp: "#.hasOwnProperty(#)".}
@@ -139,6 +140,12 @@ proc items*[K, V](d: JDict[K, V]): seq[(K, V)] =
   for k in d:
     result.add((k, d[k]))
 
+proc newJDict*[K, V](): JDict[K, V] {.importcpp: "{@}".}
+proc newJDict*[K, V](elements: openarray[(K, V)]): JDict[K, V] =
+  result = newJDict[K, V]()
+  for (k, v) in elements:
+    result[k] = v
+
 #[
 proc values*[K, V](d: JDict[K, V]): seq[V] =
   # TODO: This could be optimized
@@ -161,11 +168,23 @@ type
 proc `[]`*[T](s: JSeq[T], i: int): T {.importcpp: "#[#]", noSideEffect.}
 proc `[]=`*[T](s: JSeq[T], i: int, v: T) {.importcpp: "#[#] = #", noSideEffect.}
 
-proc newJSeq*[T](len: int = 0): JSeq[T] {.importcpp: "new Array(#)".}
+proc newJSeqOfCap*[T](len: int = 0): JSeq[T] {.importcpp: "new Array(#)".}
+proc newJSeq*[T](elements: varargs[T]): JSeq[T] =
+  result = newJSeqOfCap[T](elements.len)
+  for i in 0 ..< elements.len:
+    result[i] = elements[i]
+
 proc len*[T](s: JSeq[T]): int {.importcpp: "#.length", noSideEffect.}
 proc add*[T](s: JSeq[T]; x: T) {.importcpp: "#.push(#)", noSideEffect.}
 
 proc shrink*[T](s: JSeq[T]; shorterLen: int) {.importcpp: "#.length = #", noSideEffect.}
+
+proc toJsElements*[T](s: JSeq[T]): JSeq[JsObject] =
+  cast[JSeq[JsObject]](s)
+
+iterator items*[T](s: JSeq[T]): T =
+  for i in 0 ..< s.len:
+    yield s[i]
 
 # -----------------------------------------------------------------------------
 # seq JS extensions (use with care, violate seq semantics)
@@ -174,3 +193,18 @@ proc shrink*[T](s: JSeq[T]; shorterLen: int) {.importcpp: "#.length = #", noSide
 proc sortJS*[T](s: seq[T]): seq[T] {.importcpp: "#.sort()".}
 proc sortJS*[T](s: seq[T], compare: proc(a: T, b: T): int): seq[T] {.importcpp: "#.sort(#)".}
 
+
+
+# -----------------------------------------------------------------------------
+# Non JS stuff missing in Nim -- man I hate this
+# -----------------------------------------------------------------------------
+
+template newSeqWithIdx*(len: int, init: untyped): untyped =
+  type outType = type((
+    block:
+      var idx {.inject.}: int
+      init))
+  var result = newSeq[outType](len)
+  for idx {.inject.} in 0 ..< len:
+    result[idx] = init
+  result
